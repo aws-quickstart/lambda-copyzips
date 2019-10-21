@@ -69,8 +69,7 @@ Resources:
       DestBucket: !Ref DestinationBucket
       SourceBucket: !Ref QSS3BucketName
       Prefix: !Ref QSS3KeyPrefix
-      Objects: 
-        - "app/packages/dragen/dragen.zip"
+      Objects: !Ref SourceObjects
   CopyZipsFunction:
     Type: AWS::Lambda::Function
     DependsOn:
