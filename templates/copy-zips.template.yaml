@@ -26,7 +26,19 @@ Parameters:
   SourceObjects:
     Type: CommaDelimitedList
     Default: ""
+Conditions:
+  CreateDestBucket:
+    !Equals:
+      - !Ref DestinationBucket
+      - ""
 Resources:
+  LambdaZipsBucket:
+    Condition: CreateDestBucket
+    Properties:
+      Tags: []
+      VersioningConfiguration:
+        Status: "Enabled"
+    Type: "AWS::S3::Bucket"
   CopyRole:
     Type: AWS::IAM::Role
     Properties:
@@ -124,4 +136,10 @@ Resources:
               finally:
                   timer.cancel()
                   cfnresponse.send(event, context, status, {}, None)
-      
+Outputs:
+  LambdaZipsBucket:
+    Description: S3 Bucket for the Lambda Function Code
+    Value: !If 
+      - CreateDestBucket
+      - !Ref DestinationBucket
+      - !Ref LambdaZipsBucket
