@@ -27,17 +27,10 @@ Parameters:
     Type: CommaDelimitedList
     Default: ""
 Conditions:
-  CreateDestBucket:
-    !Equals:
-      - !Ref DestinationBucket
-      - ""
+  CreateDestBucket: !Equals [!Ref DestinationBucket, ""]
 Resources:
   LambdaZipsBucket:
     Condition: CreateDestBucket
-    Properties:
-      Tags: []
-      VersioningConfiguration:
-        Status: "Enabled"
     Type: "AWS::S3::Bucket"
   CopyRole:
     Type: AWS::IAM::Role
@@ -61,7 +54,7 @@ Resources:
             Resource: '*'
           - Sid: S3Get
             Effect: Allow
-            Action: 
+            Action:
             - s3:GetObject
             Resource: !Sub arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*
           - Sid: S3Put
@@ -69,23 +62,20 @@ Resources:
             Action:
             - s3:PutObject
             - s3:DeleteObject
-            Resource: !Sub arn:aws:s3:::${DestinationBucket}/*
+            Resource: !Sub
+            - "arn:aws:s3:::${DestBucket}/*"
+            - DestBucket: !If [CreateDestBucket, !Ref LambdaZipsBucket, !Ref DestinationBucket]
   CopyZips:
     Type: AWS::CloudFormation::CustomResource
-    DependsOn:
-      - CopyZipsFunction
-      - CopyRole
     Properties:
       ServiceToken: !GetAtt CopyZipsFunction.Arn
-      DestRegion: !Ref AWS::Region
-      DestBucket: !Ref DestinationBucket
+      DestRegion: !Ref "AWS::Region"
+      DestBucket: !If [CreateDestBucket, !Ref LambdaZipsBucket, !Ref DestinationBucket]
       SourceBucket: !Ref QSS3BucketName
       Prefix: !Ref QSS3KeyPrefix
       Objects: !Ref SourceObjects
   CopyZipsFunction:
     Type: AWS::Lambda::Function
-    DependsOn:
-      - CopyRole
     Properties:
       Description: Copies objects from a source S3 bucket to a destination
       Handler: index.handler
@@ -139,7 +129,4 @@ Resources:
 Outputs:
   LambdaZipsBucket:
     Description: S3 Bucket for the Lambda Function Code
-    Value: !If 
-      - CreateDestBucket
-      - !Ref DestinationBucket
-      - !Ref LambdaZipsBucket
+    Value: !If [CreateDestBucket, !Ref LambdaZipsBucket, !Ref DestinationBucket]
