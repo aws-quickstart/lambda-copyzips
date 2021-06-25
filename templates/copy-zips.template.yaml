@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: This CloudFormation Template invokes another template responsible for
-  copying files to a local region S3 Bucket for AWS Lambda.
+  copying files to a local region S3 Bucket for AWS Lambda. (qs-1s1i3qaas)
 Parameters:
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
@@ -19,10 +19,6 @@ Parameters:
     Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
       can include numbers, lowercase letters, uppercase letters, hyphens (-), and
       forward slash (/).
-    Type: String
-  QSS3BucketRegion:
-    Default: 'us-east-1'
-    Description: "The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value."
     Type: String
   DestinationBucket:
     Type: String
@@ -55,8 +51,54 @@ Resources:
           Statement:
           - Sid: Logging
             Effect: Allow
-            Action: logs:*
-            Resource: '*'
+            Action:
+              - logs:StartQuery
+              - logs:DeleteLogGroup
+              - logs:CreateLogStream
+              - logs:DisassociateKmsKey
+              - logs:StopQuery
+              - logs:UntagLogGroup
+              - logs:PutResourcePolicy
+              - logs:GetLogGroupFields
+              - logs:GetLogDelivery
+              - logs:TagLogGroup
+              - logs:DeleteRetentionPolicy
+              - logs:PutQueryDefinition
+              - logs:UpdateLogDelivery
+              - logs:FilterLogEvents
+              - logs:PutRetentionPolicy
+              - logs:PutMetricFilter
+              - logs:DescribeQueryDefinitions
+              - logs:PutDestination
+              - logs:GetLogRecord
+              - logs:PutLogEvents
+              - logs:ListLogDeliveries
+              - logs:DescribeExportTasks
+              - logs:DescribeLogStreams
+              - logs:CreateLogGroup
+              - logs:DeleteMetricFilter
+              - logs:CancelExportTask
+              - logs:DescribeMetricFilters
+              - logs:DeleteSubscriptionFilter
+              - logs:DescribeResourcePolicies
+              - logs:DescribeSubscriptionFilters
+              - logs:GetQueryResults
+              - logs:DeleteQueryDefinition
+              - logs:DeleteResourcePolicy
+              - logs:DeleteLogStream
+              - logs:CreateExportTask
+              - logs:DeleteLogDelivery
+              - logs:DescribeLogGroups
+              - logs:CreateLogDelivery
+              - logs:PutDestinationPolicy
+              - logs:GetLogEvents
+              - logs:DescribeQueries
+              - logs:DescribeDestinations
+              - logs:PutSubscriptionFilter
+              - logs:DeleteDestination
+              - logs:TestMetricFilter
+              - logs:ListTagsLogGroup
+            Resource: !Sub arn:${AWS::Partition}:s3:::*
           - Sid: S3Get
             Effect: Allow
             Action:
@@ -70,7 +112,7 @@ Resources:
             - s3:PutObject
             - s3:DeleteObject
             Resource: !Sub
-            - "arn:aws:s3:::${DestBucket}/*"
+            - !Sub arn:${AWS::Partition}:s3:::${DestBucket}/*
             - DestBucket: !If [CreateDestBucket, !Ref LambdaZipsBucket, !Ref DestinationBucket]
   CopyZips:
     Type: AWS::CloudFormation::CustomResource
