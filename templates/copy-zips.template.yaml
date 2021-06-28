@@ -128,7 +128,7 @@ Resources:
     Properties:
       Description: Copies objects from a source S3 bucket to a destination
       Handler: index.handler
-      Runtime: python3.7
+      Runtime: python3.8
       Role: !GetAtt CopyRole.Arn
       Timeout: 240
       Code:
