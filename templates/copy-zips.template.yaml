@@ -20,12 +20,19 @@ Parameters:
       can include numbers, lowercase letters, uppercase letters, hyphens (-), and
       forward slash (/).
     Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: "Deprecated. This has no effect and has been retained for backwards compatibility."
+    Type: String
   DestinationBucket:
     Type: String
     Default: ""
   SourceObjects:
     Type: CommaDelimitedList
     Default: ""
+Metadata:
+  # this is a no-op, to work around linting for unused parameter, which we need to retain for compatability
+  UnusedParam: !Ref QSS3BucketRegion
 Conditions:
   CreateDestBucket: !Equals [!Ref DestinationBucket, ""]
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
