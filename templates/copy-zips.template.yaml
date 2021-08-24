@@ -30,12 +30,19 @@ Parameters:
   SourceObjects:
     Type: CommaDelimitedList
     Default: ""
+  StripPrefixAtDestination:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
 Metadata:
   # this is a no-op, to work around linting for unused parameter, which we need to retain for compatability
   UnusedParam: !Ref QSS3BucketRegion
 Conditions:
   CreateDestBucket: !Equals [!Ref DestinationBucket, ""]
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
+  NoDestPrefix: !Equals [!Ref StripPrefixAtDestination, 'true']
 Resources:
   LambdaZipsBucket:
     Condition: CreateDestBucket
@@ -130,6 +137,10 @@ Resources:
       SourceBucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Prefix: !Ref QSS3KeyPrefix
       Objects: !Ref SourceObjects
+      DestinationPrefix: !If
+        - NoDestPrefix
+        - ''
+        - !Ref QSS3KeyPrefix
   CopyZipsFunction:
     Type: AWS::Lambda::Function
     Properties:
