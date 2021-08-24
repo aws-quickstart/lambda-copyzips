@@ -145,15 +145,14 @@ Resources:
           import threading
           import boto3
           import cfnresponse
-          def copy_objects(source_bucket, dest_bucket, prefix, objects):
+          def copy_objects(source_bucket, dest_bucket, source_prefix, destination_prefix, objects):
               s3 = boto3.client('s3')
               for o in objects:
-                  key = prefix + o
                   copy_source = {
                       'Bucket': source_bucket,
-                      'Key': key
+                      'Key': source_prefix + o
                   }
-                  s3.copy_object(CopySource=copy_source, Bucket=dest_bucket, Key=key)
+                  s3.copy_object(CopySource=copy_source, Bucket=dest_bucket, Key=destination_prefix + o)
           def delete_objects(bucket, prefix, objects):
               s3 = boto3.client('s3')
               objects = {'Objects': [{'Key': prefix + o} for o in objects]}
@@ -170,12 +169,13 @@ Resources:
               try:
                   source_bucket = event['ResourceProperties']['SourceBucket']
                   dest_bucket = event['ResourceProperties']['DestBucket']
-                  prefix = event['ResourceProperties']['Prefix']
+                  source_prefix = event['ResourceProperties']['Prefix']
                   objects = event['ResourceProperties']['Objects']
+                  destination_prefix = event['ResourceProperties'].get('DestinationPrefix', source_prefix)
                   if event['RequestType'] == 'Delete':
-                      delete_objects(dest_bucket, prefix, objects)
+                      delete_objects(dest_bucket, source_prefix, objects)
                   else:
-                      copy_objects(source_bucket, dest_bucket, prefix, objects)
+                      copy_objects(source_bucket, dest_bucket, source_prefix, destination_prefix, objects)
               except Exception as e:
                   logging.error('Exception: %s' % e, exc_info=True)
                   status = cfnresponse.FAILED
