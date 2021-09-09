@@ -36,6 +36,14 @@ Parameters:
     AllowedValues:
       - 'true'
       - 'false'
+  PermissionsBoundaryArn:
+    Description: Will be attached to all created IAM Roles to satisfy security requirements
+    Type: String
+    Default: ''
+  RolePath:
+    Description: Will be attached to all created IAM Roles to satisfy security requirements
+    Type: String
+    Default: ''
 Metadata:
   # this is a no-op, to work around linting for unused parameter, which we need to retain for compatability
   UnusedParam: !Ref QSS3BucketRegion
@@ -43,6 +51,8 @@ Conditions:
   CreateDestBucket: !Equals [!Ref DestinationBucket, ""]
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
   NoDestPrefix: !Equals [!Ref StripPrefixAtDestination, 'true']
+  RolePathProvided: !Not [!Equals ["", !Ref RolePath]]
+  PermissionsBoundaryProvided: !Not [!Equals ["", !Ref PermissionsBoundaryArn]]
 Resources:
   LambdaZipsBucket:
     Condition: CreateDestBucket
@@ -50,7 +60,13 @@ Resources:
   CopyRole:
     Type: AWS::IAM::Role
     Properties:
-      Path: /
+      Path: !If [RolePathProvided, !Ref RolePath, !Ref AWS::NoValue]
+      PermissionsBoundary:
+        !If [
+          PermissionsBoundaryProvided,
+          !Ref PermissionsBoundaryArn,
+          !Ref AWS::NoValue,
+        ]
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
