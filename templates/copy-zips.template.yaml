@@ -44,6 +44,11 @@ Parameters:
     Description: Will be attached to all created IAM Roles to satisfy security requirements
     Type: String
     Default: ''
+  IamRoleArn:
+    Description: ARN of a pre-deployed IAM Role with sufficient permissions for the lambda;
+      see the CopyRole resource in this template for reference
+    Type: String
+    Default: ''
 Metadata:
   # this is a no-op, to work around linting for unused parameter, which we need to retain for compatability
   UnusedParam: !Ref QSS3BucketRegion
@@ -53,12 +58,14 @@ Conditions:
   NoDestPrefix: !Equals [!Ref StripPrefixAtDestination, 'true']
   RolePathProvided: !Not [!Equals ["", !Ref RolePath]]
   PermissionsBoundaryProvided: !Not [!Equals ["", !Ref PermissionsBoundaryArn]]
+  DeployIam: !Equals ["", !Ref IamRoleArn]
 Resources:
   LambdaZipsBucket:
     Condition: CreateDestBucket
     Type: "AWS::S3::Bucket"
   CopyRole:
     Type: AWS::IAM::Role
+    Condition: DeployIam
     Properties:
       Path: !If [RolePathProvided, !Ref RolePath, !Ref AWS::NoValue]
       PermissionsBoundary:
@@ -163,7 +170,7 @@ Resources:
       Description: Copies objects from a source S3 bucket to a destination
       Handler: index.handler
       Runtime: python3.8
-      Role: !GetAtt CopyRole.Arn
+      Role: !If [DeployIam, !GetAtt CopyRole.Arn, !Ref IamRoleArn]
       Timeout: 240
       Code:
         ZipFile: |
