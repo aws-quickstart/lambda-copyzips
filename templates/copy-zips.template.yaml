@@ -81,76 +81,28 @@ Resources:
           Principal:
             Service: lambda.amazonaws.com
           Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
       - PolicyName: ConfigPolicy
         PolicyDocument:
           Version: 2012-10-17
           Statement:
-          - Sid: Logging
-            Effect: Allow
-            Action:
-              - logs:StartQuery
-              - logs:DeleteLogGroup
-              - logs:CreateLogStream
-              - logs:DisassociateKmsKey
-              - logs:StopQuery
-              - logs:UntagLogGroup
-              - logs:PutResourcePolicy
-              - logs:GetLogGroupFields
-              - logs:GetLogDelivery
-              - logs:TagLogGroup
-              - logs:DeleteRetentionPolicy
-              - logs:PutQueryDefinition
-              - logs:UpdateLogDelivery
-              - logs:FilterLogEvents
-              - logs:PutRetentionPolicy
-              - logs:PutMetricFilter
-              - logs:DescribeQueryDefinitions
-              - logs:PutDestination
-              - logs:GetLogRecord
-              - logs:PutLogEvents
-              - logs:ListLogDeliveries
-              - logs:DescribeExportTasks
-              - logs:DescribeLogStreams
-              - logs:CreateLogGroup
-              - logs:DeleteMetricFilter
-              - logs:CancelExportTask
-              - logs:DescribeMetricFilters
-              - logs:DeleteSubscriptionFilter
-              - logs:DescribeResourcePolicies
-              - logs:DescribeSubscriptionFilters
-              - logs:GetQueryResults
-              - logs:DeleteQueryDefinition
-              - logs:DeleteResourcePolicy
-              - logs:DeleteLogStream
-              - logs:CreateExportTask
-              - logs:DeleteLogDelivery
-              - logs:DescribeLogGroups
-              - logs:CreateLogDelivery
-              - logs:PutDestinationPolicy
-              - logs:GetLogEvents
-              - logs:DescribeQueries
-              - logs:DescribeDestinations
-              - logs:PutSubscriptionFilter
-              - logs:DeleteDestination
-              - logs:TestMetricFilter
-              - logs:ListTagsLogGroup
-            Resource: !Sub arn:${AWS::Partition}:s3:::*
-          - Sid: S3Get
-            Effect: Allow
-            Action:
-            - s3:GetObject
-            Resource: !Sub
-              - arn:${AWS::Partition}:s3:::${S3Bucket}/${QSS3KeyPrefix}*
-              - S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-          - Sid: S3Put
-            Effect: Allow
-            Action:
-            - s3:PutObject
-            - s3:DeleteObject
-            Resource: !Sub
-            - arn:${AWS::Partition}:s3:::${DestBucket}/*
-            - DestBucket: !If [CreateDestBucket, !Ref LambdaZipsBucket, !Ref DestinationBucket]
+            - Sid: S3Get
+              Effect: Allow
+              Action:
+              - s3:GetObject
+              Resource: !Sub
+                - arn:${AWS::Partition}:s3:::${S3Bucket}/${QSS3KeyPrefix}*
+                - S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+            - Sid: S3Put
+              Effect: Allow
+              Action:
+              - s3:PutObject
+              - s3:DeleteObject
+              Resource: !Sub
+              - arn:${AWS::Partition}:s3:::${DestBucket}/*
+              - DestBucket: !If [CreateDestBucket, !Ref LambdaZipsBucket, !Ref DestinationBucket]
   CopyZips:
     Type: AWS::CloudFormation::CustomResource
     Properties:
@@ -207,7 +159,7 @@ Resources:
                   objects = event['ResourceProperties']['Objects']
                   destination_prefix = event['ResourceProperties'].get('DestinationPrefix', source_prefix)
                   if event['RequestType'] == 'Delete':
-                      delete_objects(dest_bucket, source_prefix, objects)
+                      delete_objects(dest_bucket, destination_prefix, objects)
                   else:
                       copy_objects(source_bucket, dest_bucket, source_prefix, destination_prefix, objects)
               except Exception as e:
