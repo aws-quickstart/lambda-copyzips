@@ -159,7 +159,7 @@ Resources:
                   objects = event['ResourceProperties']['Objects']
                   destination_prefix = event['ResourceProperties'].get('DestinationPrefix', source_prefix)
                   if event['RequestType'] == 'Delete':
-                      delete_objects(dest_bucket, source_prefix, objects)
+                      delete_objects(dest_bucket, destination_prefix, objects)
                   else:
                       copy_objects(source_bucket, dest_bucket, source_prefix, destination_prefix, objects)
               except Exception as e:
